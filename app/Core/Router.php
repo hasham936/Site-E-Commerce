@@ -26,6 +26,12 @@ final class Router
         // Extrait uniquement le chemin de l'URI
         $path = parse_url($uri, PHP_URL_PATH) ?? '/';
 
+        $path = preg_replace('#^/mini_mvc/public#', '', $path);
+
+        if (empty($path)) {
+            $path = '/';
+        }
+        
         // Parcourt chaque route enregistrée
         foreach ($this->routes as [$routeMethod, $routePath, $handler]) {
             // Vérifie correspondance stricte de méthode et de chemin
@@ -39,6 +45,21 @@ final class Router
                 return;
             }
         }
+
+        echo "DEBUG - URI reçue : $uri<br>";
+        echo "DEBUG - Path nettoyé : $path<br>";
+        echo "DEBUG - Méthode : $method<br><br>";
+    
+        foreach ($this->routes as [$routeMethod, $routePath, $handler]) {
+            echo "Comparaison : $routeMethod === $method && $routePath === $path<br>";
+        
+        if ($method === $routeMethod && $path === $routePath) {
+            [$class, $action] = $handler;
+            $controller = new $class();
+            $controller->$action();
+            return;
+        }
+    }
 
         // Si aucune route ne correspond, renvoie un 404 minimaliste
         http_response_code(404);
