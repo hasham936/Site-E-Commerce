@@ -53,21 +53,4 @@ final class HomeController extends Controller
         ]);
     }
 
-    public function authentication(): void
-    {
-        // Appelle le moteur de rendu avec la vue et ses paramètres
-        $this->render('home/authentication', params: [
-            // Définit le titre transmis à la vue
-            'title' => 'Authentication',
-        ]);
-    }
-
-    public function process(): void
-    {
-        // Appelle le moteur de rendu avec la vue et ses paramètres
-        $this->render('home/process', params: [
-            // Définit le titre transmis à la vue
-            'title' => 'Process Registration',
-        ]);
-    }
 }

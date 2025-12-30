@@ -10,6 +10,7 @@ class User
     private $id;
     private $nom;
     private $email;
+    private $mot_de_passe;
 
     // =====================
     // Getters / Setters
@@ -25,7 +26,7 @@ class User
         $this->id = $id;
     }
 
-    public function getnom()
+    public function getNom()
     {
         return $this->nom;
     }
@@ -43,6 +44,16 @@ class User
     public function setEmail($email)
     {
         $this->email = $email;
+    }
+
+    public function getPassword()
+    {
+        return $this->mot_de_passe;
+    }
+
+    public function setPassword($password)
+    {
+        $this->mot_de_passe = $password;
     }
 
     // =====================
@@ -93,19 +104,19 @@ class User
     public function save()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("INSERT INTO user (nom, email) VALUES (?, ?)");
-        return $stmt->execute([$this->nom, $this->email]);
+        $stmt = $pdo->prepare("INSERT INTO user (nom, email, mot_de_passe) VALUES (?, ?, ?)");
+        return $stmt->execute([$this->nom, $this->email, $this->mot_de_passe]);
     }
 
     /**
-     * Met à jour les informations d’un utilisateur existant
+     * Met à jour les informations d'un utilisateur existant
      * @return bool
      */
     public function update()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("UPDATE user SET nom = ?, email = ? WHERE id = ?");
-        return $stmt->execute([$this->nom, $this->email, $this->id]);
+        $stmt = $pdo->prepare("UPDATE user SET nom = ?, email = ?, mot_de_passe = ? WHERE id = ?");
+        return $stmt->execute([$this->nom, $this->email, $this->mot_de_passe, $this->id]);
     }
 
     /**
