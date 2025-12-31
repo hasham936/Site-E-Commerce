@@ -66,5 +66,3 @@ final class Router
         echo '404 Not Found';
     }
 }
-
-

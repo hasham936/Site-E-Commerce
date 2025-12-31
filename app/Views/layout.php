@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/mini_mvc/public/css/product.css">
     <link rel="stylesheet" href="/mini_mvc/public/css/product-page.css">
     <link rel="stylesheet" href="/mini_mvc/public/css/kit-details.css">
+    <link rel="stylesheet" href="/mini_mvc/public/css/authentication.css">
     <link href="https://db.onlinewebfonts.com/c/1dc7840abb13fcda12aa8d1cb21fb832?family=Agrandir" rel="stylesheet" type="text/css"/>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>

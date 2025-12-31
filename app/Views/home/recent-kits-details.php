@@ -1,3 +1,4 @@
+<!-- Exemple pour recent-kits-details.php -->
 <!-- Section Détails Recent Kits -->
 
 <?php if ($recentKitsDetails): ?>
@@ -12,9 +13,11 @@
       <p class="kit-detail-title"><?= htmlspecialchars($recentKitsDetails['name']) ?></p>
       <p class="kit-detail-price"> Price : <?= htmlspecialchars($recentKitsDetails['price']) ?> €</p>
       
-      <!-- Formulaire d'ajout au panier -->
+      <!-- ⚠️ CORRECTION: Action sans /mini_mvc/public et ajout de quantite -->
       <form method="POST" action="/mini_mvc/public/cart/add">
         <input type="hidden" name="product_id" value="<?= $recentKitsDetails['id'] ?>">
+        <input type="hidden" name="quantite" value="1">
+        <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?? 1 ?>">
         
         <div class="size-grid">
           <p class="size-title">Size:</p>
@@ -129,3 +132,4 @@
   border-color: black;
 }
 </style>
+

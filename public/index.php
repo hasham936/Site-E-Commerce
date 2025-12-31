@@ -11,7 +11,7 @@ use Mini\Core\Router;
 
 // Table des routes
 $routes = [
-    // Routes de base
+    // Routes publiques
     ['GET', '/', [Mini\Controllers\HomeController::class, 'index']],
     ['GET', '/users', [Mini\Controllers\HomeController::class, 'users']],
     
@@ -24,20 +24,18 @@ $routes = [
     ['GET', '/retro-kits-details', [Mini\Controllers\ProductController::class, 'retroKitsDetails']],
     ['GET', '/accessories-details', [Mini\Controllers\ProductController::class, 'accessoriesDetails']],
     
-    // Routes panier (MISES À JOUR)
-    ['GET', '/cart', [Mini\Controllers\CartController::class, 'show']],
-    ['POST', '/cart/add', [Mini\Controllers\CartController::class, 'addFromForm']],
-    ['POST', '/cart/api/add', [Mini\Controllers\CartController::class, 'add']],
-    ['POST', '/cart/update', [Mini\Controllers\CartController::class, 'update']],
-    ['POST', '/cart/remove', [Mini\Controllers\CartController::class, 'remove']],
-    ['POST', '/cart/clear', [Mini\Controllers\CartController::class, 'clear']],
+    // Routes panier
+    ['GET', '/cart', [Mini\Controllers\CartController::class, 'index']],
+    ['POST', '/cart/add', [Mini\Controllers\CartController::class, 'add']],
+    ['GET', '/cart/remove', [Mini\Controllers\CartController::class, 'remove']],
+    ['GET', '/cart/clear', [Mini\Controllers\CartController::class, 'clear']],
     
-    // Routes commandes (NOUVELLES)
-    ['GET', '/orders', [Mini\Controllers\OrderController::class, 'listByUser']],
-    ['GET', '/orders/validated', [Mini\Controllers\OrderController::class, 'listValidated']],
-    ['GET', '/orders/show', [Mini\Controllers\OrderController::class, 'show']],
-    ['POST', '/orders/create', [Mini\Controllers\OrderController::class, 'create']],
-    ['POST', '/orders/update-status', [Mini\Controllers\OrderController::class, 'updateStatus']],
+    // Routes commandes
+    ['GET', '/checkout', [Mini\Controllers\OrderController::class, 'checkout']],
+    ['POST', '/order/confirm', [Mini\Controllers\OrderController::class, 'confirm']],
+    ['GET', '/order/success', [Mini\Controllers\OrderController::class, 'success']],
+    ['GET', '/order/history', [Mini\Controllers\OrderController::class, 'history']],
+    ['GET', '/order/details', [Mini\Controllers\OrderController::class, 'details']],
     
     // Routes authentification
     ['GET', '/authentication', [Mini\Controllers\AuthController::class, 'authentication']],
