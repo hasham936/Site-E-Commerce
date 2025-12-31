@@ -1,15 +1,9 @@
 <div class="cart-page">
     <h1>Mon Panier</h1>
 
-    <?php if (isset($error)): ?>
-        <div class="error-message">
-            <?= $error ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if (isset($success)): ?>
-        <div class="success-message">
-            <?= $success ?>
+    <?php if (isset($message)): ?>
+        <div class="alert alert-<?= $messageType ?>">
+            <?= htmlspecialchars($message) ?>
         </div>
     <?php endif; ?>
 
@@ -26,25 +20,39 @@
                 <?php foreach ($cartItems as $item): ?>
                     <div class="cart-item">
                         <img src="/mini_mvc/public/image/product/<?= htmlspecialchars($item['image']) ?>" 
-                             alt="<?= htmlspecialchars($item['name']) ?>">
+                             alt="<?= htmlspecialchars($item['nom']) ?>">
                         
                         <div class="item-details">
-                            <h3><?= htmlspecialchars($item['name']) ?></h3>
-                            <?php if ($item['size']): ?>
-                                <p>Taille : <?= htmlspecialchars($item['size']) ?></p>
-                            <?php endif; ?>
-                            <p>Prix unitaire : <?= htmlspecialchars($item['price']) ?> €</p>
-                            <p>Quantité : <?= htmlspecialchars($item['quantity']) ?></p>
+                            <h3><?= htmlspecialchars($item['nom']) ?></h3>
+                            <p class="item-category">
+                                Catégorie: <?= htmlspecialchars($item['categorie_nom'] ?? 'Non classé') ?>
+                            </p>
+                            <p>Prix unitaire: <?= number_format($item['prix'], 2) ?> €</p>
+                            
+                            <!-- Formulaire de mise à jour de la quantité -->
+                            <form method="POST" action="/mini_mvc/public/cart/update" class="quantity-form">
+                                <input type="hidden" name="cart_id" value="<?= $item['panier_id'] ?>">
+                                <label for="quantity-<?= $item['panier_id'] ?>">Quantité:</label>
+                                <input type="number" 
+                                       id="quantity-<?= $item['panier_id'] ?>" 
+                                       name="quantite" 
+                                       value="<?= $item['quantite'] ?>" 
+                                       min="1" 
+                                       max="<?= $item['stock'] ?>">
+                                <button type="submit" class="btn-update">Mettre à jour</button>
+                            </form>
+                            
+                            <p class="stock-info">Stock disponible: <?= $item['stock'] ?></p>
                             <p class="item-total">
-                                Total : <?= number_format($item['price'] * $item['quantity'], 2) ?> €
+                                Total: <?= number_format($item['prix'] * $item['quantite'], 2) ?> €
                             </p>
                         </div>
 
-                        <a href="/mini_mvc/public/cart/remove?id=<?= $item['id'] ?>" 
-                           class="btn-remove"
-                           onclick="return confirm('Supprimer cet article ?')">
-                            Supprimer
-                        </a>
+                        <form method="POST" action="/mini_mvc/public/cart/remove" 
+                              onsubmit="return confirm('Supprimer cet article ?')">
+                            <input type="hidden" name="cart_id" value="<?= $item['panier_id'] ?>">
+                            <button type="submit" class="btn-remove">Supprimer</button>
+                        </form>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -54,29 +62,34 @@
                 <h2>Résumé</h2>
                 
                 <div class="summary-line">
-                    <span>Sous-total :</span>
+                    <span>Sous-total:</span>
                     <span><?= number_format($total, 2) ?> €</span>
                 </div>
 
                 <div class="summary-line">
-                    <span>Livraison :</span>
+                    <span>Livraison:</span>
                     <span>Gratuite</span>
                 </div>
 
                 <div class="summary-total">
-                    <span>Total :</span>
+                    <span>Total:</span>
                     <span><?= number_format($total, 2) ?> €</span>
                 </div>
 
-                <a href="/mini_mvc/public/checkout" class="btn-checkout">
-                    Passer la commande
-                </a>
+                <form method="POST" action="/mini_mvc/public/orders/create">
+                    <input type="hidden" name="user_id" value="<?= $user_id ?>">
+                    <button type="submit" class="btn-checkout">
+                        Valider la commande
+                    </button>
+                </form>
 
-                <a href="/mini_mvc/public/cart/clear" 
-                   class="btn-clear"
-                   onclick="return confirm('Vider le panier ?')">
-                    Vider le panier
-                </a>
+                <form method="POST" action="/mini_mvc/public/cart/clear" 
+                      onsubmit="return confirm('Vider le panier ?')">
+                    <input type="hidden" name="user_id" value="<?= $user_id ?>">
+                    <button type="submit" class="btn-clear">
+                        Vider le panier
+                    </button>
+                </form>
 
                 <a href="/mini_mvc/public/" class="btn-continue">
                     Continuer mes achats
@@ -100,22 +113,22 @@
     font-family: 'Agrandir';
 }
 
-.error-message {
-    background-color: #ffcccc;
-    color: #cc0000;
+/* Styles pour les alertes */
+.alert {
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
     font-family: 'Agrandir';
 }
 
-.success-message {
+.alert-error {
+    background-color: #ffcccc;
+    color: #cc0000;
+}
+
+.alert-success {
     background-color: #ccffcc;
     color: #008000;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    font-family: 'Agrandir';
 }
 
 .empty-cart {
@@ -174,6 +187,47 @@
     font-family: 'Agrandir';
 }
 
+.item-category {
+    font-size: 14px;
+    color: #999;
+    font-style: italic;
+}
+
+.stock-info {
+    font-size: 14px;
+    color: #0052CC;
+}
+
+.quantity-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.quantity-form input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-family: 'Agrandir';
+}
+
+.btn-update {
+    padding: 5px 15px;
+    background-color: #0052CC;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Agrandir';
+    font-size: 14px;
+}
+
+.btn-update:hover {
+    background-color: #003d99;
+}
+
 .item-total {
     font-weight: bold;
     color: #000;
@@ -186,8 +240,9 @@
     background-color: #ff4444;
     color: white;
     padding: 10px 20px;
+    border: none;
     border-radius: 5px;
-    text-decoration: none;
+    cursor: pointer;
     height: fit-content;
     align-self: center;
     font-family: 'Agrandir';
@@ -229,18 +284,26 @@
     font-family: 'Agrandir';
 }
 
-.btn-checkout {
+.btn-checkout,
+.btn-clear,
+.btn-continue {
     display: block;
     width: 100%;
     padding: 15px;
-    background-color: #0052CC;
-    color: white;
     text-align: center;
     text-decoration: none;
     border-radius: 5px;
     margin-bottom: 10px;
     font-weight: bold;
     font-family: 'Agrandir';
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-checkout {
+    background-color: #0052CC;
+    color: white;
 }
 
 .btn-checkout:hover {
@@ -248,16 +311,8 @@
 }
 
 .btn-clear {
-    display: block;
-    width: 100%;
-    padding: 12px;
     background-color: #ff4444;
     color: white;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    font-family: 'Agrandir';
 }
 
 .btn-clear:hover {
@@ -265,15 +320,8 @@
 }
 
 .btn-continue {
-    display: block;
-    width: 100%;
-    padding: 12px;
     background-color: #666;
     color: white;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 5px;
-    font-family: 'Agrandir';
 }
 
 .btn-continue:hover {

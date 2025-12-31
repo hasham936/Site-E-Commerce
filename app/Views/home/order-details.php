@@ -1,9 +1,15 @@
 <div class="order-details-page">
     <div class="back-link">
-        <a href="/mini_mvc/public/order/history">← Retour à mes commandes</a>
+        <a href="/mini_mvc/public/orders?user_id=<?= $order['user_id'] ?>">← Retour à mes commandes</a>
     </div>
 
     <h1>Détails de la commande #<?= $order['id'] ?></h1>
+
+    <?php if (isset($message)): ?>
+        <div class="alert alert-<?= $messageType ?>">
+            <?= htmlspecialchars($message) ?>
+        </div>
+    <?php endif; ?>
 
     <div class="details-container">
         
@@ -12,69 +18,88 @@
             <h2>Informations générales</h2>
             
             <div class="info-row">
-                <span class="info-label">Numéro de commande :</span>
+                <span class="info-label">Numéro de commande:</span>
                 <span class="info-value">#<?= $order['id'] ?></span>
             </div>
 
             <div class="info-row">
-                <span class="info-label">Date :</span>
+                <span class="info-label">Date:</span>
                 <span class="info-value"><?= date('d/m/Y à H:i', strtotime($order['created_at'])) ?></span>
             </div>
 
             <div class="info-row">
-                <span class="info-label">Statut :</span>
-                <span class="status-badge <?= strtolower(str_replace(' ', '-', $order['status'])) ?>">
-                    <?= htmlspecialchars($order['status']) ?>
+                <span class="info-label">Statut:</span>
+                <span class="status-badge status-<?= strtolower($order['statut']) ?>">
+                    <?= htmlspecialchars(ucfirst($order['statut'])) ?>
                 </span>
             </div>
 
             <div class="info-row">
-                <span class="info-label">Total :</span>
+                <span class="info-label">Total:</span>
                 <span class="info-value total"><?= number_format($order['total'], 2) ?> €</span>
             </div>
         </div>
 
-        <!-- Informations de livraison -->
+        <!-- Informations client -->
         <div class="delivery-infos">
-            <h2>Informations de livraison</h2>
+            <h2>Informations client</h2>
             
             <div class="info-row">
-                <span class="info-label">Nom :</span>
-                <span class="info-value"><?= htmlspecialchars($order['fullname']) ?></span>
+                <span class="info-label">Nom:</span>
+                <span class="info-value"><?= htmlspecialchars($order['user_nom']) ?></span>
             </div>
 
             <div class="info-row">
-                <span class="info-label">Adresse :</span>
-                <span class="info-value"><?= htmlspecialchars($order['address']) ?></span>
-            </div>
-
-            <div class="info-row">
-                <span class="info-label">Code postal :</span>
-                <span class="info-value"><?= htmlspecialchars($order['zipcode']) ?></span>
-            </div>
-
-            <div class="info-row">
-                <span class="info-label">Ville :</span>
-                <span class="info-value"><?= htmlspecialchars($order['city']) ?></span>
-            </div>
-
-            <div class="info-row">
-                <span class="info-label">Téléphone :</span>
-                <span class="info-value"><?= htmlspecialchars($order['phone']) ?></span>
-            </div>
-
-            <div class="info-row">
-                <span class="info-label">Mode de paiement :</span>
-                <span class="info-value"><?= htmlspecialchars($order['payment_method']) ?></span>
+                <span class="info-label">Email:</span>
+                <span class="info-value"><?= htmlspecialchars($order['user_email']) ?></span>
             </div>
         </div>
+    </div>
 
+    <!-- Liste des produits -->
+    <div class="order-products">
+        <h2>Produits commandés</h2>
+        
+        <table class="products-table">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Catégorie</th>
+                    <th>Prix unitaire</th>
+                    <th>Quantité</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($order['products'] as $product): ?>
+                    <tr>
+                        <td class="product-info">
+                            <img src="/mini_mvc/public/image/product/<?= htmlspecialchars($product['image_url']) ?>" 
+                                 alt="<?= htmlspecialchars($product['product_nom']) ?>">
+                            <span><?= htmlspecialchars($product['product_nom']) ?></span>
+                        </td>
+                        <td><?= htmlspecialchars($product['categorie_nom'] ?? 'Non classé') ?></td>
+                        <td><?= number_format($product['prix_unitaire'], 2) ?> €</td>
+                        <td><?= $product['quantite'] ?></td>
+                        <td class="product-total">
+                            <?= number_format($product['prix_unitaire'] * $product['quantite'], 2) ?> €
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="4">Total de la commande:</td>
+                    <td class="grand-total"><?= number_format($order['total'], 2) ?> €</td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
 </div>
 
 <style>
 .order-details-page {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 50px auto;
     padding: 20px;
 }
@@ -87,6 +112,7 @@
     color: #0052CC;
     text-decoration: none;
     font-weight: bold;
+    font-family: 'Agrandir';
 }
 
 .back-link a:hover {
@@ -96,26 +122,42 @@
 .order-details-page h1 {
     font-size: 32px;
     margin-bottom: 30px;
+    font-family: 'Agrandir';
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-family: 'Agrandir';
+}
+
+.alert-success {
+    background-color: #ccffcc;
+    color: #008000;
 }
 
 .details-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
+    margin-bottom: 30px;
 }
 
-/* Sections d'infos */
 .order-infos,
-.delivery-infos {
+.delivery-infos,
+.order-products {
     background-color: white;
     padding: 30px;
     border-radius: 8px;
 }
 
 .order-infos h2,
-.delivery-infos h2 {
+.delivery-infos h2,
+.order-products h2 {
     margin-top: 0;
     margin-bottom: 20px;
+    font-family: 'Agrandir';
 }
 
 .info-row {
@@ -134,11 +176,13 @@
 .info-label {
     font-weight: bold;
     color: #666;
+    font-family: 'Agrandir';
 }
 
 .info-value {
     color: #333;
     text-align: right;
+    font-family: 'Agrandir';
 }
 
 .info-value.total {
@@ -152,26 +196,91 @@
     border-radius: 15px;
     font-size: 14px;
     font-weight: bold;
+    font-family: 'Agrandir';
 }
 
-.status-badge.en-attente {
+.status-badge.status-en_attente {
     background-color: #fff3cd;
     color: #856404;
 }
 
-.status-badge.en-cours {
-    background-color: #cce5ff;
-    color: #004085;
-}
-
-.status-badge.livree {
+.status-badge.status-validee {
     background-color: #d4edda;
     color: #155724;
+}
+
+.status-badge.status-annulee {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Table des produits */
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Agrandir';
+}
+
+.products-table thead {
+    background-color: #f5f5f5;
+}
+
+.products-table th,
+.products-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.products-table th {
+    font-weight: bold;
+    color: #333;
+}
+
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.product-info img {
+    width: 60px;
+    height: 75px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.product-total {
+    font-weight: bold;
+}
+
+.products-table tfoot {
+    background-color: #f5f5f5;
+}
+
+.total-row td {
+    font-weight: bold;
+    font-size: 18px;
+    padding: 20px 15px;
+}
+
+.grand-total {
+    color: #0052CC;
+    font-size: 22px;
 }
 
 @media (max-width: 768px) {
     .details-container {
         grid-template-columns: 1fr;
+    }
+    
+    .products-table {
+        font-size: 14px;
+    }
+    
+    .product-info img {
+        width: 40px;
+        height: 50px;
     }
 }
 </style>
