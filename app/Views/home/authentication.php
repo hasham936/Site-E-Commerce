@@ -26,7 +26,7 @@
                 <input type="password" id="login-password" name="login-password" required>
             </div>
             
-            <button type="submit" class="btn-submit">Se connecter</button>
+            <button type="submit" class="button-submit">Se connecter</button>
         </form>
 
         <div class="auth-divider">
@@ -52,7 +52,7 @@
                 <input type="password" id="register-password" name="register-password" required>
             </div>
             
-            <button type="submit" class="btn-submit">S'inscrire</button>
+            <button type="submit" class="button-submit">S'inscrire</button>
         </form>
     </div>
 </div>

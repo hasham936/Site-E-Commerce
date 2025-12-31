@@ -1,6 +1,4 @@
-<!-- Exemple pour recent-kits-details.php -->
 <!-- Section Détails Recent Kits -->
-
 <?php if ($recentKitsDetails): ?>
   <div class="kit-detail-container">
 
@@ -13,9 +11,7 @@
       <p class="kit-detail-title"><?= htmlspecialchars($recentKitsDetails['name']) ?></p>
       <p class="kit-detail-price"> Price : <?= htmlspecialchars($recentKitsDetails['price']) ?> €</p>
       
-      <!-- ⚠️ CORRECTION: Action sans /mini_mvc/public et ajout de quantite -->
-      <form method="POST" action="/mini_mvc/public/cart/add">
-        <input type="hidden" name="product_id" value="<?= $recentKitsDetails['id'] ?>">
+      <form method="POST" action="/mini_mvc/public/cart/add-from-form">        <input type="hidden" name="product_id" value="<?= $recentKitsDetails['id'] ?>">
         <input type="hidden" name="quantite" value="1">
         <input type="hidden" name="user_id" value="<?= $_SESSION['user_id'] ?? 1 ?>">
         
@@ -82,7 +78,6 @@
 <?php endif; ?>
 
 <!-- Section Recommandation -->
-
 <p class="new-in-text">WE RECOMMAND</p>
 
 <div class="product-grid">
@@ -97,39 +92,4 @@
   <?php endforeach; ?>
 </div>
 
-<style>
-/* Cacher les inputs radio */
-.size-button-container input[type="radio"] {
-  display: none;
-}
-
-/* Style des labels qui ressemblent à des boutons */
-.size-button-container label {
-  display: inline-block;
-  width: 100px;
-  height: 40px;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  font-size: 16px;
-  border: 2px solid gray;
-  background-color: #fff;
-  cursor: pointer;
-  font-family: 'Aggrandir';
-  transition: background-color 0.3s, color 0.3s;
-  text-align: center;
-  line-height: 40px;
-}
-
-/* Style au hover */
-.size-button-container label:hover {
-  background-color: #f0f0f0;
-}
-
-/* Style quand le radio est sélectionné */
-.size-button-container input[type="radio"]:checked + label {
-  background-color: black;
-  color: white;
-  border-color: black;
-}
-</style>
 

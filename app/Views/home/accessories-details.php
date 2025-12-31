@@ -1,5 +1,4 @@
 <!-- Section Détails Accessoires -->
-
 <?php if ($accessoriesDetails): ?>
   <div class="kit-detail-container">
 
@@ -12,7 +11,7 @@
       <p class="kit-detail-title"><?= htmlspecialchars($accessoriesDetails['name']) ?></p>
       <p class="kit-detail-price"> Price : <?= htmlspecialchars($accessoriesDetails['price']) ?> €</p>
 
-      <form method="POST" action="/mini_mvc/public/cart/add">
+      <form method="POST" action="/mini_mvc/public/cart/add-from-form">
         <input type="hidden" name="product_id" value="<?= $accessoriesDetails['id'] ?>">
         <input type="hidden" name="size" value="">
         
@@ -53,7 +52,6 @@
 <?php endif; ?>
 
 <!-- Section Recommandation -->
-
 <p class="new-in-text">WE RECOMMAND</p>
 
 <div class="product-grid">

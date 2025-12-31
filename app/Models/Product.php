@@ -94,8 +94,11 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Récupère les derniers produits ajoutés
-    public static function getLatest(int $limit = 5) {
+    /**
+     * Récupère les derniers produits ajoutés
+     */
+    public static function getLatest(int $limit = 5)
+    {
         $pdo = Database::getPDO();
         $stmt = $pdo->prepare("SELECT * FROM product ORDER BY created_at DESC LIMIT :limit");
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -103,7 +106,11 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Récupère un produit par son ID
+    /**
+     * Récupère un produit par son ID
+     * @param int $id
+     * @return array|null
+     */
     public static function getById(int $id)
     {
         $pdo = Database::getPDO();
@@ -112,14 +119,24 @@ class Product
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Récupère les produits par catégorie
+    /**
+     * Récupère un produit par son ID
+     * @param int $id
+     * @return array|null
+     */
+    public static function findById($id)
+    {
+        return self::getById($id);
+    }
+
+    /**
+     * Récupère les produits par catégorie
+     */
     public static function getByCategory(int $id_category)
     {
         $pdo = Database::getPDO();
-
         $stmt = $pdo->prepare("SELECT * FROM product WHERE id_category = :id");
         $stmt->execute(['id' => $id_category]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
 }

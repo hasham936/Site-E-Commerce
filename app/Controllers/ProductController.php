@@ -71,7 +71,6 @@ final class ProductController extends Controller
     }
 
     /* Fonctions pour afficher les details des produits */
-    
     public function recentKitsDetails(): void
     {
 

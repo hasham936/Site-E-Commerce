@@ -13,9 +13,8 @@
       <p class="kit-detail-price"> Price : <?= htmlspecialchars($retroKitsDetails['price']) ?> €</p>
       
       <!-- Formulaire d'ajout au panier -->
-      <form method="POST" action="/mini_mvc/public/cart/add">
+      <form method="POST" action="/mini_mvc/public/cart/add-from-form">        
         <input type="hidden" name="product_id" value="<?= $retroKitsDetails['id'] ?>">
-        
         <div class="size-grid">
           <p class="size-title">Size:</p>
           <div class="size-button-container">
@@ -93,39 +92,3 @@
     </div>
   <?php endforeach; ?>
 </div>
-
-<style>
-/* Cacher les inputs radio */
-.size-button-container input[type="radio"] {
-  display: none;
-}
-
-/* Style des labels qui ressemblent à des boutons */
-.size-button-container label {
-  display: inline-block;
-  width: 100px;
-  height: 40px;
-  margin-right: 10px;
-  margin-bottom: 10px;
-  font-size: 16px;
-  border: 2px solid gray;
-  background-color: #fff;
-  cursor: pointer;
-  font-family: 'Aggrandir';
-  transition: background-color 0.3s, color 0.3s;
-  text-align: center;
-  line-height: 40px;
-}
-
-/* Style au hover */
-.size-button-container label:hover {
-  background-color: #f0f0f0;
-}
-
-/* Style quand le radio est sélectionné */
-.size-button-container input[type="radio"]:checked + label {
-  background-color: black;
-  color: white;
-  border-color: black;
-}
-</style>

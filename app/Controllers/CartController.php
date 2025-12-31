@@ -10,115 +10,255 @@ use Mini\Models\Product;
 
 final class CartController extends Controller
 {
-    // Afficher le panier
-    public function index(): void
+    /**
+     * Affiche le panier d'un utilisateur
+     */
+    public function show(): void
     {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error'] = 'Vous devez être connecté pour voir votre panier';
-            header('Location: /mini_mvc/public/authentication');
-            exit;
+        $user_id = $_SESSION['user_id'] ?? 1; // Utilise la session comme les autres méthodes
+        // Ici je récupère les produits du panier de l'user authentifié
+        $cartItems = Cart::getByUserId($user_id);
+        // Ici on récupère le prix total du panier
+        $total = Cart::getTotalByUserId($user_id);
+        
+        $message = null;
+        $messageType = null;
+        
+        if (isset($_GET['success'])) {
+            if ($_GET['success'] === 'added') {
+                $message = 'Produit ajouté au panier avec succès !';
+                $messageType = 'success';
+            } elseif ($_GET['success'] === 'updated') {
+                $message = 'Quantité mise à jour avec succès !';
+                $messageType = 'success';
+            } elseif ($_GET['success'] === 'removed') {
+                $message = 'Article supprimé du panier avec succès !';
+                $messageType = 'success';
+            } elseif ($_GET['success'] === 'cleared') {
+                $message = 'Panier vidé avec succès !';
+                $messageType = 'success';
+            }
+            elseif ($_GET['success'] === 'order_created') {
+                $message = 'Commande passée avec succès !';
+                $messageType = 'success';
+            }
         }
 
-        $user_id = (int) $_SESSION['user_id'];
-
-        $cartItems = Cart::getByUserId($user_id);
-        $total = Cart::getTotal($user_id);
-
-        $this->render('home/cart', [
-            'title' => 'Mon Panier',
+        
+        if (isset($_GET['error'])) {
+            if ($_GET['error'] === 'update_failed') {
+                $message = 'Erreur lors de la mise à jour.';
+                $messageType = 'error';
+            } elseif ($_GET['error'] === 'delete_failed') {
+                $message = 'Erreur lors de la suppression.';
+                $messageType = 'error';
+            } elseif ($_GET['error'] === 'clear_failed') {
+                $message = 'Erreur lors du vidage du panier.';
+                $messageType = 'error';
+            }
+        }
+        
+        $this->render('home/cart', params: [
+            'title' => 'Mon panier',
             'cartItems' => $cartItems,
             'total' => $total,
-            'error' => $_SESSION['error'] ?? null,
-            'success' => $_SESSION['success'] ?? null,
+            'user_id' => $user_id,
+            'message' => $message,
+            'messageType' => $messageType
         ]);
-
-        unset($_SESSION['error']);
-        unset($_SESSION['success']);
     }
 
-    // Ajouter un produit au panier
+    /**
+     * Ajoute un produit au panier (API JSON)
+     */
     public function add(): void
     {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error'] = 'Vous devez être connecté pour ajouter au panier';
-            header('Location: /mini_mvc/public/authentication');
-            exit;
-        }
-
+        header('Content-Type: application/json; charset=utf-8');
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /mini_mvc/public/');
-            exit;
+            http_response_code(405);
+            echo json_encode(['error' => 'Méthode non autorisée. Utilisez POST.'], JSON_PRETTY_PRINT);
+            return;
         }
-
-        // Convertir les valeurs pour éviter le TypeError
-        $product_id = (int) ($_POST['product_id'] ?? 0);
-        $quantity   = (int) ($_POST['quantity'] ?? 1);
-        $size       = $_POST['size'] ?? null;
-
-        // Vérifier que le produit existe
-        $product = Product::getById($product_id);
-
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = $_POST;
+        }
+        
+        if (empty($input['user_id']) || empty($input['product_id']) || empty($input['quantite'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Les champs "user_id", "product_id" et "quantite" sont requis.'], JSON_PRETTY_PRINT);
+            return;
+        }
+        
+        // Vérifie que le produit existe
+        $product = Product::findById($input['product_id']);
         if (!$product) {
-            $_SESSION['error'] = 'Produit introuvable';
-            header('Location: /mini_mvc/public/');
-            exit;
+            http_response_code(404);
+            echo json_encode(['error' => 'Produit introuvable.'], JSON_PRETTY_PRINT);
+            return;
         }
-
-        // Créer l'objet Cart
+        
         $cart = new Cart();
-        $cart->setUserId((int) $_SESSION['user_id']);
-        $cart->setProductId($product_id);
-        $cart->setQuantity($quantity);
-        $cart->setSize($size);
-
-        if ($cart->add()) {
-            $_SESSION['success'] = 'Produit ajouté au panier !';
+        $cart->setUserId($input['user_id']);
+        $cart->setProductId($input['product_id']);
+        $cart->setQuantite($input['quantite']);
+        
+        if ($cart->save()) {
+            http_response_code(201);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Produit ajouté au panier avec succès.'
+            ], JSON_PRETTY_PRINT);
         } else {
-            $_SESSION['error'] = 'Erreur lors de l\'ajout au panier';
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors de l\'ajout au panier.'], JSON_PRETTY_PRINT);
         }
-
-        $referer = $_SERVER['HTTP_REFERER'] ?? '/mini_mvc/public/';
-        header('Location: ' . $referer);
-        exit;
     }
 
-    // Supprimer un article du panier
+    /**
+     * Ajoute un produit au panier depuis un formulaire HTML
+     */
+    public function addFromForm(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /mini_mvc/public/products');
+            return;
+        }
+        
+        $product_id = $_POST['product_id'] ?? null;
+        $quantite = intval($_POST['quantite'] ?? 1);
+        $user_id = $_SESSION['user_id'] ?? 1;
+        
+        if (!$product_id) {
+            header('Location: /mini_mvc/public/products');
+            return;
+        }
+        
+        // Vérifie que le produit existe
+        $product = Product::findById($product_id);
+        if (!$product) {
+            header('Location: /mini_mvc/public/products');
+            return;
+        }
+        
+        $cart = new Cart();
+        $cart->setUserId($user_id);
+        $cart->setProductId($product_id);
+        $cart->setQuantite($quantite);
+        
+        if ($cart->save()) {
+            header('Location: /mini_mvc/public/cart?user_id=' . $user_id . '&success=added');
+        } else {
+            header('Location: /mini_mvc/public/products');
+        }
+    }
+
+    /**
+     * Met à jour la quantité d'un produit dans le panier
+     */
+    public function update(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
+                header('Location: /mini_mvc/public/cart');
+            return;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = $_POST;
+        }
+        
+        if (empty($input['cart_id']) || empty($input['quantite'])) {
+            header('Location: /mini_mvc/public/cart?user_id=' . ($_GET['user_id'] ?? 1) . '&error=missing_fields');
+            return;
+        }
+        
+        // Récupère l'article du panier
+        $pdo = \Mini\Core\Database::getPDO();
+        $stmt = $pdo->prepare("SELECT * FROM cart WHERE id = ?");
+        $stmt->execute([$input['cart_id']]);
+        $cartItem = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if (!$cartItem) {
+            header('Location: /mini_mvc/public/cart?user_id=' . ($_GET['user_id'] ?? 1) . '&error=item_not_found');
+            return;
+        }
+        
+        $cart = new Cart();
+        $cart->setId($input['cart_id']);
+        $cart->setUserId($cartItem['user_id']);
+        $cart->setProductId($cartItem['product_id']);
+        $cart->setQuantite($input['quantite']);
+        
+        if ($cart->save()) {
+            header('Location: /mini_mvc/public/cart?user_id=' . $cartItem['user_id'] . '&success=updated');
+        } else {
+            header('Location: /mini_mvc/public/cart?user_id=' . $cartItem['user_id'] . '&error=update_failed');
+        }
+    }
+
+    /**
+     * Supprime un article du panier
+     */
     public function remove(): void
     {
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /mini_mvc/public/authentication');
-            exit;
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /mini_mvc/public/cart');
+            return;
         }
-
-        $cart_id = (int) ($_GET['id'] ?? 0);
-
-        if (Cart::remove($cart_id)) {
-            $_SESSION['success'] = 'Article retiré du panier';
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = $_POST;
+        }
+        
+        $cart_id = $input['cart_id'] ?? $_GET['cart_id'] ?? null;
+        
+        if (!$cart_id) {
+            header('Location: /mini_mvc/public/cart?user_id=' . ($_GET['user_id'] ?? 1) . '&error=missing_cart_id');
+            return;
+        }
+        
+        // Récupère l'article pour obtenir le user_id
+        $pdo = \Mini\Core\Database::getPDO();
+        $stmt = $pdo->prepare("SELECT user_id FROM cart WHERE id = ?");
+        $stmt->execute([$cart_id]);
+        $cartItem = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $user_id = $cartItem['user_id'] ?? ($_GET['user_id'] ?? 1);
+        
+        $cart = new Cart();
+        $cart->setId($cart_id);
+        
+        if ($cart->delete()) {
+            header('Location: /mini_mvc/public/cart?user_id=' . $user_id . '&success=removed');
         } else {
-            $_SESSION['error'] = 'Erreur lors de la suppression';
+            header('Location: /mini_mvc/public/cart?user_id=' . $user_id . '&error=delete_failed');
         }
-
-        header('Location: /mini_mvc/public/cart');
-        exit;
     }
 
-    // Vider le panier
+    /**
+     * Vide le panier d'un utilisateur
+     */
     public function clear(): void
     {
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /mini_mvc/public/authentication');
-            exit;
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /mini_mvc/public/cart');
+            return;
         }
-
-        $user_id = (int) $_SESSION['user_id'];
-
-        if (Cart::clear($user_id)) {
-            $_SESSION['success'] = 'Panier vidé';
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = $_POST;
+        }
+        
+        $user_id = $_SESSION['user_id'] ?? $input['user_id'] ?? $_GET['user_id'] ?? 1;
+        
+        if (Cart::clearByUserId($user_id)) {
+            header('Location: /mini_mvc/public/cart?user_id=' . $user_id . '&success=cleared');
         } else {
-            $_SESSION['error'] = 'Erreur lors du vidage du panier';
+            header('Location: /mini_mvc/public/cart?user_id=' . $user_id . '&error=clear_failed');
         }
-
-        header('Location: /mini_mvc/public/cart');
-        exit;
     }
 }

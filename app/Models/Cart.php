@@ -10,11 +10,12 @@ class Cart
     private $id;
     private $user_id;
     private $product_id;
-    private $quantity;
-    private $size;
+    private $quantite;
+    private $created_at;
+    private $updated_at;
 
     // =====================
-    // Getters et Setters
+    // Getters / Setters
     // =====================
 
     public function getId()
@@ -47,24 +48,34 @@ class Cart
         $this->product_id = $product_id;
     }
 
-    public function getQuantity()
+    public function getQuantite()
     {
-        return $this->quantity;
+        return $this->quantite;
     }
 
-    public function setQuantity($quantity)
+    public function setQuantite($quantite)
     {
-        $this->quantity = $quantity;
+        $this->quantite = $quantite;
     }
 
-    public function getSize()
+    public function getCreatedAt()
     {
-        return $this->size;
+        return $this->created_at;
     }
 
-    public function setSize($size)
+    public function setCreatedAt($created_at)
     {
-        $this->size = $size;
+        $this->created_at = $created_at;
+    }
+
+    public function getUpdatedAt()
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt($updated_at)
+    {
+        $this->updated_at = $updated_at;
     }
 
     // =====================
@@ -72,91 +83,99 @@ class Cart
     // =====================
 
     /**
-     * Ajouter un produit au panier
-     */
-    public function add()
-    {
-        $pdo = Database::getPDO();
-        
-        // Vérifier si le produit existe déjà dans le panier avec la même taille
-        $stmt = $pdo->prepare("SELECT * FROM cart WHERE user_id = ? AND product_id = ? AND size = ?");
-        $stmt->execute([$this->user_id, $this->product_id, $this->size]);
-        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($existing) {
-            // Si le produit existe déjà, on augmente la quantité
-            $newQuantity = $existing['quantity'] + $this->quantity;
-            $stmt = $pdo->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
-            return $stmt->execute([$newQuantity, $existing['id']]);
-        } else {
-            // Sinon on ajoute une nouvelle ligne
-            $stmt = $pdo->prepare("INSERT INTO cart (user_id, product_id, quantity, size) VALUES (?, ?, ?, ?)");
-            return $stmt->execute([$this->user_id, $this->product_id, $this->quantity, $this->size]);
-        }
-    }
-
-    /**
-     * Récupérer les articles du panier d'un utilisateur
+     * Récupère tous les articles du panier d'un utilisateur
+     * @param int $user_id
+     * @return array
      */
     public static function getByUserId($user_id)
     {
         $pdo = Database::getPDO();
         $stmt = $pdo->prepare("
-            SELECT c.*, p.name, p.price, p.image 
+            SELECT p.*, c.quantity, c.id as cart_id
             FROM cart c
-            JOIN product p ON c.product_id = p.id
+            INNER JOIN product p ON c.product_id = p.id
             WHERE c.user_id = ?
+            ORDER BY c.created_at DESC
         ");
         $stmt->execute([$user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Supprimer un article du panier
+     * Récupère un article du panier par user_id et product_id
+     * @param int $user_id
+     * @param int $product_id
+     * @return array|null
      */
-    public static function remove($cart_id)
+    public static function findByUserAndProduct($user_id, $product_id)
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("DELETE FROM cart WHERE id = ?");
-        return $stmt->execute([$cart_id]);
+        $stmt = $pdo->prepare("SELECT * FROM cart WHERE user_id = ? AND product_id = ?");
+        $stmt->execute([$user_id, $product_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Vider tout le panier d'un utilisateur
+     * Calcule le total du panier d'un utilisateur
+     * @param int $user_id
+     * @return float
      */
-    public static function clear($user_id)
-    {
-        $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("DELETE FROM cart WHERE user_id = ?");
-        return $stmt->execute([$user_id]);
-    }
-
-    /**
-     * Calculer le total du panier
-     */
-    public static function getTotal($user_id)
+    public static function getTotalByUserId($user_id)
     {
         $pdo = Database::getPDO();
         $stmt = $pdo->prepare("
-            SELECT SUM(c.quantity * p.price) as total
+            SELECT SUM(p.price * c.quantity) as total
             FROM cart c
-            JOIN product p ON c.product_id = p.id
+            INNER JOIN product p ON c.product_id = p.id
             WHERE c.user_id = ?
         ");
         $stmt->execute([$user_id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['total'] ?? 0;
+        return $result['total'] ?? 0.00;
     }
 
     /**
-     * Compter le nombre d'articles dans le panier
+     * Ajoute ou met à jour un produit dans le panier
+     * @return bool
      */
-    public static function countItems($user_id)
+    public function save()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("SELECT SUM(quantity) as count FROM cart WHERE user_id = ?");
-        $stmt->execute([$user_id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['count'] ?? 0;
+        
+        // Vérifie si l'article existe déjà dans le panier
+        $existing = self::findByUserAndProduct($this->user_id, $this->product_id);
+        
+        if ($existing) {
+            // Met à jour la quantité
+            $stmt = $pdo->prepare("UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?");
+            return $stmt->execute([$this->quantite, $this->user_id, $this->product_id]);
+        } else {
+            // Ajoute un nouvel article
+            $stmt = $pdo->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)");
+            return $stmt->execute([$this->user_id, $this->product_id, $this->quantite]);
+        }
+    }
+
+    /**
+     * Supprime un article du panier
+     * @return bool
+     */
+    public function delete()
+    {
+        $pdo = Database::getPDO();
+        $stmt = $pdo->prepare("DELETE FROM cart WHERE id = ?");
+        return $stmt->execute([$this->id]);
+    }
+
+    /**
+     * Vide le panier d'un utilisateur
+     * @param int $user_id
+     * @return bool
+     */
+    public static function clearByUserId($user_id)
+    {
+        $pdo = Database::getPDO();
+        $stmt = $pdo->prepare("DELETE FROM cart WHERE user_id = ?");
+        return $stmt->execute([$user_id]);
     }
 }

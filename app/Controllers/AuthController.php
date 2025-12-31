@@ -107,7 +107,7 @@ final class AuthController extends Controller
         exit;
     }
 
-    // Déconnexion
+    // déconnexion
     public function logout(): void
     {
         session_unset();

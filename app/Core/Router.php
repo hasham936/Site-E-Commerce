@@ -46,21 +46,6 @@ final class Router
             }
         }
 
-        echo "DEBUG - URI reçue : $uri<br>";
-        echo "DEBUG - Path nettoyé : $path<br>";
-        echo "DEBUG - Méthode : $method<br><br>";
-    
-        foreach ($this->routes as [$routeMethod, $routePath, $handler]) {
-            echo "Comparaison : $routeMethod === $method && $routePath === $path<br>";
-        
-        if ($method === $routeMethod && $path === $routePath) {
-            [$class, $action] = $handler;
-            $controller = new $class();
-            $controller->$action();
-            return;
-        }
-    }
-
         // Si aucune route ne correspond, renvoie un 404 minimaliste
         http_response_code(404);
         echo '404 Not Found';

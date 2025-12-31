@@ -51,7 +51,12 @@
   max-width: 500px;
 }
 
-.size-button{
+.size-button-container input[type="radio"] {
+  display: none;
+}
+
+.size-button-container label {
+  display: inline-block;
   width: 100px;
   height: 40px;
   margin-right: 10px;
@@ -62,16 +67,22 @@
   cursor: pointer;
   font-family: 'Aggrandir';
   transition: background-color 0.3s, color 0.3s;
+  text-align: center;
+  line-height: 40px;
 }
 
-.size-button:hover{
+.size-button-container label:hover {
   background-color: black;
   color: white;
-  opacity: 0.8;
+}
+
+.size-button-container input[type="radio"]:checked + label {
+  background-color: black;
+  color: white;
+  border-color: black;
 }
 
 /* Styles pour d'ajout au panier et logo des paiement */
-
 .purchase-row{
   display: flex;
   flex-direction: column;
@@ -150,4 +161,15 @@
   padding: 0 0 20px 0;
   line-height: 1.6;
   color: #333;
+}
+
+/* Message produit épuisé */
+
+.stock-out-message{
+  font-size: 18px;
+  font-weight: 600;
+  color: #e74c3c;
+  margin: 0;
+  margin-bottom: 20px;
+  font-family: 'Aggrandir';
 }

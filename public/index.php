@@ -11,11 +11,9 @@ use Mini\Core\Router;
 
 // Table des routes
 $routes = [
-    // Routes publiques
     ['GET', '/', [Mini\Controllers\HomeController::class, 'index']],
     ['GET', '/users', [Mini\Controllers\HomeController::class, 'users']],
     
-    // Routes produits
     ['GET', '/products', [Mini\Controllers\ProductController::class, 'products']],
     ['GET', '/recent-kits', [Mini\Controllers\ProductController::class, 'recentKits']],
     ['GET', '/retro-kits', [Mini\Controllers\ProductController::class, 'retroKits']],
@@ -24,20 +22,25 @@ $routes = [
     ['GET', '/retro-kits-details', [Mini\Controllers\ProductController::class, 'retroKitsDetails']],
     ['GET', '/accessories-details', [Mini\Controllers\ProductController::class, 'accessoriesDetails']],
     
-    // Routes panier
-    ['GET', '/cart', [Mini\Controllers\CartController::class, 'index']],
+    ['GET', '/cart', [Mini\Controllers\CartController::class, 'show']],
     ['POST', '/cart/add', [Mini\Controllers\CartController::class, 'add']],
-    ['GET', '/cart/remove', [Mini\Controllers\CartController::class, 'remove']],
-    ['GET', '/cart/clear', [Mini\Controllers\CartController::class, 'clear']],
+    ['POST', '/cart/add-from-form', [Mini\Controllers\CartController::class, 'addFromForm']],
+    ['POST', '/cart/update', [Mini\Controllers\CartController::class, 'update']],
+    ['POST', '/cart/remove', [Mini\Controllers\CartController::class, 'remove']],
+    ['POST', '/cart/clear', [Mini\Controllers\CartController::class, 'clear']],
     
-    // Routes commandes
+    ['GET', '/orders', [Mini\Controllers\OrderController::class, 'listByUser']],
+    ['GET', '/orders/validated', [Mini\Controllers\OrderController::class, 'listValidated']],
+    ['GET', '/orders/show', [Mini\Controllers\OrderController::class, 'show']],
+    ['POST', '/orders/create', [Mini\Controllers\OrderController::class, 'create']],
+    ['POST', '/orders/update-status', [Mini\Controllers\OrderController::class, 'updateStatus']],
+    
     ['GET', '/checkout', [Mini\Controllers\OrderController::class, 'checkout']],
     ['POST', '/order/confirm', [Mini\Controllers\OrderController::class, 'confirm']],
     ['GET', '/order/success', [Mini\Controllers\OrderController::class, 'success']],
     ['GET', '/order/history', [Mini\Controllers\OrderController::class, 'history']],
     ['GET', '/order/details', [Mini\Controllers\OrderController::class, 'details']],
     
-    // Routes authentification
     ['GET', '/authentication', [Mini\Controllers\AuthController::class, 'authentication']],
     ['POST', '/register', [Mini\Controllers\AuthController::class, 'register']],
     ['POST', '/login', [Mini\Controllers\AuthController::class, 'login']],
