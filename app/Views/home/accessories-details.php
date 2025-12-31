@@ -12,14 +12,19 @@
       <p class="kit-detail-title"><?= htmlspecialchars($accessoriesDetails['name']) ?></p>
       <p class="kit-detail-price"> Price : <?= htmlspecialchars($accessoriesDetails['price']) ?> €</p>
 
-      <div class="purchase-row">
-        <a class="add-to-cart-button">Add to Cart</a>
-        <div class="payment-logos">
-          <img class="logo-payment" src="/mini_mvc/public/image/logo-visa.png" alt="Visa Logo">
-          <img class="logo-payment" src="/mini_mvc/public/image/logo-mastercard.png" alt="Mastercard Logo">
-          <img class="logo-payment" src="/mini_mvc/public/image/logo-paypal.png" alt="PayPal Logo">
+      <form method="POST" action="/mini_mvc/public/cart/add">
+        <input type="hidden" name="product_id" value="<?= $accessoriesDetails['id'] ?>">
+        <input type="hidden" name="size" value="">
+        
+        <div class="purchase-row">
+          <button type="submit" class="add-to-cart-button">Add to Cart</button>
+          <div class="payment-logos">
+            <img class="logo-payment" src="/mini_mvc/public/image/logo-visa.png" alt="Visa Logo">
+            <img class="logo-payment" src="/mini_mvc/public/image/logo-mastercard.png" alt="Mastercard Logo">
+            <img class="logo-payment" src="/mini_mvc/public/image/logo-paypal.png" alt="PayPal Logo">
+          </div>
         </div>
-      </div>
+      </form>
 
       <div class="list">
         <details class="list-item" open>
@@ -56,7 +61,7 @@
     <div class="product-card">
       <img src="/mini_mvc/public/image/product/<?= htmlspecialchars($product['image']) ?>" 
      class="product-image" 
-     onclick="window.location.href='/mini_mvc/public/<?= strtolower(str_replace(' ', '-', $product['category'])) ?>'">
+     onclick="window.location.href='/mini_mvc/public/accessories-details?id=<?= $product['id'] ?>'">
       <p class="product-price"><?= htmlspecialchars($product['price']) ?> €</p>
       <p class="product-name"><?= htmlspecialchars($product['name']) ?></p>
     </div>

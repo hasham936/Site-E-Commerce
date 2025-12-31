@@ -5,178 +5,163 @@ declare(strict_types=1);
 namespace Mini\Controllers;
 
 use Mini\Core\Controller;
-use Mini\Models\Cart;
 use Mini\Models\Order;
+use Mini\Models\Cart;
 
 final class OrderController extends Controller
 {
-    // Afficher la page de validation de commande
-    public function checkout(): void
+    /**
+     * Affiche toutes les commandes d'un utilisateur
+     */
+    public function listByUser(): void
     {
-        // Vérifier si l'utilisateur est connecté
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error'] = 'Vous devez être connecté pour passer commande';
-            header('Location: /mini_mvc/public/authentication');
-            exit;
-        }
-
-        $user_id = $_SESSION['user_id'];
+        $user_id = $_GET['user_id'] ?? 1; // Par défaut user_id = 1 pour la démo
         
-        // Récupérer les articles du panier
-        $cartItems = Cart::getByUserId($user_id);
-        
-        // Vérifier que le panier n'est pas vide
-        if (empty($cartItems)) {
-            $_SESSION['error'] = 'Votre panier est vide';
-            header('Location: /mini_mvc/public/cart');
-            exit;
-        }
-        
-        // Calculer le total
-        $total = Cart::getTotal($user_id);
-
-        $this->render('home/checkout', [
-            'title' => 'Validation de commande',
-            'cartItems' => $cartItems,
-            'total' => $total,
-        ]);
-    }
-
-    // Confirmer et créer la commande
-    public function confirm(): void
-    {
-        // Vérifier si l'utilisateur est connecté
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /mini_mvc/public/authentication');
-            exit;
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /mini_mvc/public/cart');
-            exit;
-        }
-
-        $user_id = $_SESSION['user_id'];
-        
-        // Récupérer les données du formulaire
-        $fullname = $_POST['fullname'] ?? '';
-        $address = $_POST['address'] ?? '';
-        $zipcode = $_POST['zipcode'] ?? '';
-        $city = $_POST['city'] ?? '';
-        $phone = $_POST['phone'] ?? '';
-        $payment_method = $_POST['payment_method'] ?? '';
-
-        // Vérifier que tous les champs sont remplis
-        if (empty($fullname) || empty($address) || empty($zipcode) || empty($city) || empty($phone) || empty($payment_method)) {
-            $_SESSION['error'] = 'Tous les champs sont obligatoires';
-            header('Location: /mini_mvc/public/checkout');
-            exit;
-        }
-        
-        // Calculer le total du panier
-        $total = Cart::getTotal($user_id);
-        
-        // Vérifier que le panier n'est pas vide
-        if ($total <= 0) {
-            $_SESSION['error'] = 'Votre panier est vide';
-            header('Location: /mini_mvc/public/cart');
-            exit;
-        }
-
-        // Créer la commande
-        $order = new Order();
-        $order->setUserId($user_id);
-        $order->setTotal($total);
-        $order->setStatus('en attente');
-        $order->setFullname($fullname);
-        $order->setAddress($address);
-        $order->setZipcode($zipcode);
-        $order->setCity($city);
-        $order->setPhone($phone);
-        $order->setPaymentMethod($payment_method);
-
-        if ($order->create()) {
-            // Vider le panier
-            Cart::clear($user_id);
-
-            // Message de succès
-            $_SESSION['success'] = 'Commande validée avec succès !';
-            $_SESSION['order_id'] = $order->getId();
-            
-            // Rediriger vers la page de confirmation
-            header('Location: /mini_mvc/public/order/success');
-            exit;
-        } else {
-            $_SESSION['error'] = 'Erreur lors de la validation de la commande';
-            header('Location: /mini_mvc/public/checkout');
-            exit;
-        }
-    }
-
-    // Page de confirmation de commande
-    public function success(): void
-    {
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /mini_mvc/public/authentication');
-            exit;
-        }
-
-        if (!isset($_SESSION['order_id'])) {
-            header('Location: /mini_mvc/public/');
-            exit;
-        }
-
-        $order_id = $_SESSION['order_id'];
-        $order = Order::getById($order_id);
-
-        // Nettoyer la session
-        unset($_SESSION['order_id']);
-
-        $this->render('home/order-success', [
-            'title' => 'Commande confirmée',
-            'order' => $order,
-        ]);
-    }
-
-    // Afficher l'historique des commandes
-    public function history(): void
-    {
-        if (!isset($_SESSION['user_id'])) {
-            $_SESSION['error'] = 'Vous devez être connecté';
-            header('Location: /mini_mvc/public/authentication');
-            exit;
-        }
-
-        $user_id = $_SESSION['user_id'];
         $orders = Order::getByUserId($user_id);
-
-        $this->render('home/order-history', [
+        
+        $this->render('order/list', params: [
             'title' => 'Mes commandes',
             'orders' => $orders,
+            'user_id' => $user_id
         ]);
     }
 
-    // Voir les détails d'une commande
-    public function details(): void
+    /**
+     * Affiche toutes les commandes validées
+     */
+    public function listValidated(): void
     {
-        if (!isset($_SESSION['user_id'])) {
-            header('Location: /mini_mvc/public/authentication');
-            exit;
-        }
-
-        $order_id = $_GET['id'] ?? 0;
-        $order = Order::getById($order_id);
-
-        // Vérifier que la commande appartient à l'utilisateur
-        if (!$order || $order['user_id'] != $_SESSION['user_id']) {
-            $_SESSION['error'] = 'Commande introuvable';
-            header('Location: /mini_mvc/public/order/history');
-            exit;
-        }
-
-        $this->render('home/order-details', [
-            'title' => 'Détails de la commande',
-            'order' => $order,
+        $orders = Order::getValidatedOrders();
+        
+        $this->render('order/validated', params: [
+            'title' => 'Commandes validées',
+            'orders' => $orders
         ]);
+    }
+
+    /**
+     * Affiche les détails d'une commande
+     */
+    public function show(): void
+    {
+        $id = $_GET['id'] ?? null;
+        
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Le paramètre id est requis.'], JSON_PRETTY_PRINT);
+            return;
+        }
+        
+        $order = Order::findByIdWithProducts($id);
+        
+        $message = null;
+        $messageType = null;
+        
+        if (isset($_GET['success']) && $_GET['success'] === 'created') {
+            $message = 'Commande créée avec succès !';
+            $messageType = 'success';
+        }
+        
+        if (!$order) {
+            $this->render('order/not-found', params: [
+                'title' => 'Commande introuvable'
+            ]);
+            return;
+        }
+        
+        $this->render('order/show', params: [
+            'title' => 'Détails de la commande #' . $id,
+            'order' => $order,
+            'message' => $message,
+            'messageType' => $messageType
+        ]);
+    }
+
+    /**
+     * Crée une commande à partir du panier
+     */
+    public function create(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /cart?user_id=' . ($_GET['user_id'] ?? 1));
+            return;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = $_POST;
+        }
+        
+        $user_id = $input['user_id'] ?? $_GET['user_id'] ?? 1;
+        
+        // Vérifie que le panier n'est pas vide
+        $cartItems = Cart::getByUserId($user_id);
+        if (empty($cartItems)) {
+            header('Location: /cart?user_id=' . $user_id . '&error=empty_cart');
+            return;
+        }
+        
+        // Crée la commande
+        $orderId = Order::createFromCart($user_id);
+        
+        if ($orderId) {
+            header('Location: /orders/show?id=' . $orderId . '&success=created');
+        } else {
+            header('Location: /cart?user_id=' . $user_id . '&error=create_failed');
+        }
+    }
+
+    /**
+     * Met à jour le statut d'une commande
+     */
+    public function updateStatus(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Méthode non autorisée.'], JSON_PRETTY_PRINT);
+            return;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = $_POST;
+        }
+        
+        if (empty($input['order_id']) || empty($input['statut'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Les champs "order_id" et "statut" sont requis.'], JSON_PRETTY_PRINT);
+            return;
+        }
+        
+        $validStatuses = ['en_attente', 'validee', 'annulee'];
+        if (!in_array($input['statut'], $validStatuses)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Statut invalide. Valeurs acceptées: ' . implode(', ', $validStatuses)], JSON_PRETTY_PRINT);
+            return;
+        }
+        
+        $order = new Order();
+        $order->setId($input['order_id']);
+        $order->setStatut($input['statut']);
+        
+        // Récupère le total existant
+        $pdo = \Mini\Core\Database::getPDO();
+        $stmt = $pdo->prepare("SELECT total FROM commande WHERE id = ?");
+        $stmt->execute([$input['order_id']]);
+        $existing = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $order->setTotal($existing['total'] ?? 0);
+        
+        if ($order->update()) {
+            http_response_code(200);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Statut de la commande mis à jour avec succès.'
+            ], JSON_PRETTY_PRINT);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Erreur lors de la mise à jour.'], JSON_PRETTY_PRINT);
+        }
     }
 }

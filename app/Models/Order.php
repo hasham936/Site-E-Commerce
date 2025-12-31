@@ -3,22 +3,23 @@
 namespace Mini\Models;
 
 use Mini\Core\Database;
+use Mini\Models\Cart;
+use Mini\Models\Product;
 use PDO;
 
 class Order
 {
     private $id;
     private $user_id;
+    private $statut;
     private $total;
-    private $status;
-    private $fullname;
-    private $address;
-    private $zipcode;
-    private $city;
-    private $phone;
-    private $payment_method;
+    private $created_at;
+    private $updated_at;
 
-    // Getters et Setters
+    // =====================
+    // Getters / Setters
+    // =====================
+
     public function getId()
     {
         return $this->id;
@@ -39,6 +40,16 @@ class Order
         $this->user_id = $user_id;
     }
 
+    public function getStatut()
+    {
+        return $this->statut;
+    }
+
+    public function setStatut($statut)
+    {
+        $this->statut = $statut;
+    }
+
     public function getTotal()
     {
         return $this->total;
@@ -49,118 +60,179 @@ class Order
         $this->total = $total;
     }
 
-    public function getStatus()
+    public function getCreatedAt()
     {
-        return $this->status;
+        return $this->created_at;
     }
 
-    public function setStatus($status)
+    public function setCreatedAt($created_at)
     {
-        $this->status = $status;
+        $this->created_at = $created_at;
     }
 
-    public function getFullname()
+    public function getUpdatedAt()
     {
-        return $this->fullname;
+        return $this->updated_at;
     }
 
-    public function setFullname($fullname)
+    public function setUpdatedAt($updated_at)
     {
-        $this->fullname = $fullname;
+        $this->updated_at = $updated_at;
     }
 
-    public function getAddress()
-    {
-        return $this->address;
-    }
+    // =====================
+    // Méthodes CRUD
+    // =====================
 
-    public function setAddress($address)
-    {
-        $this->address = $address;
-    }
-
-    public function getZipcode()
-    {
-        return $this->zipcode;
-    }
-
-    public function setZipcode($zipcode)
-    {
-        $this->zipcode = $zipcode;
-    }
-
-    public function getCity()
-    {
-        return $this->city;
-    }
-
-    public function setCity($city)
-    {
-        $this->city = $city;
-    }
-
-    public function getPhone()
-    {
-        return $this->phone;
-    }
-
-    public function setPhone($phone)
-    {
-        $this->phone = $phone;
-    }
-
-    public function getPaymentMethod()
-    {
-        return $this->payment_method;
-    }
-
-    public function setPaymentMethod($payment_method)
-    {
-        $this->payment_method = $payment_method;
-    }
-
-    // Créer une nouvelle commande
-    public function create()
-    {
-        $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("
-            INSERT INTO orders (user_id, total, status, fullname, address, zipcode, city, phone, payment_method) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $result = $stmt->execute([
-            $this->user_id, 
-            $this->total, 
-            $this->status, 
-            $this->fullname, 
-            $this->address, 
-            $this->zipcode, 
-            $this->city, 
-            $this->phone, 
-            $this->payment_method
-        ]);
-        
-        if ($result) {
-            $this->id = $pdo->lastInsertId();
-            return true;
-        }
-        return false;
-    }
-
-    // Récupérer toutes les commandes d'un utilisateur
+    /**
+     * Récupère toutes les commandes d'un utilisateur
+     * @param int $user_id
+     * @return array
+     */
     public static function getByUserId($user_id)
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+        $stmt = $pdo->prepare("
+            SELECT * FROM commande 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+        ");
         $stmt->execute([$user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Récupérer une commande par son ID
-    public static function getById($order_id)
+    /**
+     * Récupère toutes les commandes validées
+     * @return array
+     */
+    public static function getValidatedOrders()
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
-        $stmt->execute([$order_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $pdo->query("
+            SELECT c.*, u.nom as user_nom, u.email as user_email
+            FROM commande c
+            INNER JOIN user u ON c.user_id = u.id
+            WHERE c.statut = 'validee'
+            ORDER BY c.created_at DESC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Récupère une commande par son ID avec ses produits
+     * @param int $id
+     * @return array|null
+     */
+    public static function findByIdWithProducts($id)
+    {
+        $pdo = Database::getPDO();
+        
+        // Récupère la commande
+        $stmt = $pdo->prepare("
+            SELECT c.*, u.nom as user_nom, u.email as user_email
+            FROM commande c
+            INNER JOIN user u ON c.user_id = u.id
+            WHERE c.id = ?
+        ");
+        $stmt->execute([$id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$order) {
+            return null;
+        }
+        
+        // Récupère les produits de la commande
+        $stmt = $pdo->prepare("
+            SELECT cp.*, p.nom as product_nom, p.image_url, cat.nom as categorie_nom
+            FROM commande_produit cp
+            INNER JOIN produit p ON cp.product_id = p.id
+            LEFT JOIN categorie cat ON p.categorie_id = cat.id
+            WHERE cp.commande_id = ?
+        ");
+        $stmt->execute([$id]);
+        $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $order;
+    }
+
+    /**
+     * Crée une nouvelle commande à partir du panier
+     * @param int $user_id
+     * @return int|false L'ID de la commande créée ou false en cas d'erreur
+     */
+    public static function createFromCart($user_id)
+    {
+        $pdo = Database::getPDO();
+        
+        // Récupère les articles du panier
+        $cartItems = Cart::getByUserId($user_id);
+        
+        if (empty($cartItems)) {
+            return false;
+        }
+        
+        // Calcule le total
+        $total = Cart::getTotalByUserId($user_id);
+        
+        try {
+            $pdo->beginTransaction();
+            
+            // Crée la commande
+            $stmt = $pdo->prepare("INSERT INTO commande (user_id, statut, total) VALUES (?, 'validee', ?)");
+            $stmt->execute([$user_id, $total]);
+            $orderId = $pdo->lastInsertId();
+            
+            // Ajoute les produits à la commande
+            $stmt = $pdo->prepare("INSERT INTO commande_produit (commande_id, product_id, quantite, prix_unitaire) VALUES (?, ?, ?, ?)");
+            
+            foreach ($cartItems as $item) {
+                $product = Product::findById($item['id']);
+                if ($product) {
+                    $stmt->execute([
+                        $orderId,
+                        $item['id'],
+                        $item['quantite'],
+                        $product['prix']
+                    ]);
+                    
+                    // Met à jour le stock
+                    $newStock = $product['stock'] - $item['quantite'];
+                    $updateStmt = $pdo->prepare("UPDATE produit SET stock = ? WHERE id = ?");
+                    $updateStmt->execute([$newStock, $item['id']]);
+                }
+            }
+            
+            // Vide le panier
+            Cart::clearByUserId($user_id);
+            
+            $pdo->commit();
+            return $orderId;
+            
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+    }
+
+    /**
+     * Met à jour le statut d'une commande
+     * @return bool
+     */
+    public function update()
+    {
+        $pdo = Database::getPDO();
+        $stmt = $pdo->prepare("UPDATE commande SET statut = ?, total = ? WHERE id = ?");
+        return $stmt->execute([$this->statut, $this->total, $this->id]);
+    }
+
+    /**
+     * Supprime une commande
+     * @return bool
+     */
+    public function delete()
+    {
+        $pdo = Database::getPDO();
+        $stmt = $pdo->prepare("DELETE FROM commande WHERE id = ?");
+        return $stmt->execute([$this->id]);
     }
 }

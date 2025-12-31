@@ -31,9 +31,6 @@
             <?php if (isset($_SESSION['user_id'])): ?>
                 <!-- Utilisateur connecté -->
                 <span class="user-name">Bonjour, <?= htmlspecialchars($_SESSION['user_nom']) ?></span>
-                <a href="/mini_mvc/public/order/history" title="Mes commandes">
-                    <i data-lucide="package"></i>
-                </a>
                 <a href="/mini_mvc/public/logout" title="Se déconnecter">
                     <i data-lucide="log-out"></i>
                 </a>

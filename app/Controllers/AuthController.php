@@ -9,7 +9,6 @@ use Mini\Models\User;
 
 final class AuthController extends Controller
 {
-    // Affiche la page d'authentification
     public function authentication(): void
     {
         $this->render('home/authentication', [
@@ -22,7 +21,7 @@ final class AuthController extends Controller
         unset($_SESSION['success']);
     }
 
-    // Traite l'inscription
+    // inscription
     public function register(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -68,7 +67,7 @@ final class AuthController extends Controller
         exit;
     }
 
-    // Traite la connexion
+    // connexion
     public function login(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

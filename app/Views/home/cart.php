@@ -97,6 +97,7 @@
 .cart-page h1 {
     font-size: 32px;
     margin-bottom: 30px;
+    font-family: 'Agrandir';
 }
 
 .error-message {
@@ -105,6 +106,7 @@
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
+    font-family: 'Agrandir';
 }
 
 .success-message {
@@ -113,6 +115,7 @@
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
+    font-family: 'Agrandir';
 }
 
 .empty-cart {
@@ -125,6 +128,7 @@
 .empty-cart p {
     font-size: 20px;
     margin-bottom: 20px;
+    font-family: 'Agrandir';
 }
 
 .cart-container {
@@ -161,11 +165,13 @@
 .item-details h3 {
     margin: 0 0 10px 0;
     font-size: 18px;
+    font-family: 'Agrandir';
 }
 
 .item-details p {
     margin: 5px 0;
     color: #666;
+    font-family: 'Agrandir';
 }
 
 .item-total {
@@ -173,6 +179,7 @@
     color: #000;
     font-size: 18px;
     margin-top: 10px;
+    font-family: 'Agrandir';
 }
 
 .btn-remove {
@@ -183,6 +190,7 @@
     text-decoration: none;
     height: fit-content;
     align-self: center;
+    font-family: 'Agrandir';
 }
 
 .btn-remove:hover {
@@ -199,6 +207,7 @@
 .cart-summary h2 {
     margin-top: 0;
     margin-bottom: 20px;
+    font-family: 'Agrandir';
 }
 
 .summary-line {
@@ -206,6 +215,7 @@
     justify-content: space-between;
     margin-bottom: 15px;
     font-size: 16px;
+    font-family: 'Agrandir';
 }
 
 .summary-total {
@@ -216,6 +226,7 @@
     margin: 20px 0;
     padding-top: 20px;
     border-top: 2px solid #ddd;
+    font-family: 'Agrandir';
 }
 
 .btn-checkout {
@@ -229,6 +240,7 @@
     border-radius: 5px;
     margin-bottom: 10px;
     font-weight: bold;
+    font-family: 'Agrandir';
 }
 
 .btn-checkout:hover {
@@ -245,6 +257,7 @@
     text-decoration: none;
     border-radius: 5px;
     margin-bottom: 10px;
+    font-family: 'Agrandir';
 }
 
 .btn-clear:hover {
@@ -260,6 +273,7 @@
     text-align: center;
     text-decoration: none;
     border-radius: 5px;
+    font-family: 'Agrandir';
 }
 
 .btn-continue:hover {

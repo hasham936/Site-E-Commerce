@@ -15,19 +15,8 @@
             <p><strong>Statut :</strong> <?= htmlspecialchars($order['status']) ?></p>
         </div>
 
-        <div class="delivery-info">
-            <h3>Informations de livraison</h3>
-            <p><strong>Nom :</strong> <?= htmlspecialchars($order['fullname']) ?></p>
-            <p><strong>Adresse :</strong> <?= htmlspecialchars($order['address']) ?></p>
-            <p><strong>Code postal :</strong> <?= htmlspecialchars($order['zipcode']) ?></p>
-            <p><strong>Ville :</strong> <?= htmlspecialchars($order['city']) ?></p>
-            <p><strong>Téléphone :</strong> <?= htmlspecialchars($order['phone']) ?></p>
-            <p><strong>Mode de paiement :</strong> <?= htmlspecialchars($order['payment_method']) ?></p>
-        </div>
-
         <div class="success-actions">
             <a href="/mini_mvc/public/" class="btn-home">Retour à l'accueil</a>
-            <a href="/mini_mvc/public/order/history" class="btn-orders">Voir mes commandes</a>
         </div>
 
     </div>
@@ -65,44 +54,28 @@
     font-size: 32px;
     color: #333;
     margin-bottom: 15px;
+    font-family: 'Agrandir';
 }
 
 .success-message {
     font-size: 18px;
     color: #666;
     margin-bottom: 30px;
+    font-family: 'Agrandir';
 }
 
 .order-info {
     background-color: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     text-align: left;
 }
 
 .order-info p {
     margin: 10px 0;
     font-size: 16px;
-}
-
-.delivery-info {
-    background-color: #f0f8ff;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    text-align: left;
-}
-
-.delivery-info h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #0052CC;
-}
-
-.delivery-info p {
-    margin: 8px 0;
-    font-size: 15px;
+    font-family: 'Agrandir';
 }
 
 .success-actions {
@@ -111,29 +84,17 @@
     justify-content: center;
 }
 
-.btn-home,
-.btn-orders {
+.btn-home {
     padding: 15px 30px;
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
-}
-
-.btn-home {
-    background-color: #666;
+    background-color: #0052CC;
     color: white;
+    font-family: 'Agrandir';
 }
 
 .btn-home:hover {
-    background-color: #444;
-}
-
-.btn-orders {
-    background-color: #0052CC;
-    color: white;
-}
-
-.btn-orders:hover {
     background-color: #003d99;
 }
 </style>

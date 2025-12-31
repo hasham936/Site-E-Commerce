@@ -1,8 +1,6 @@
 <div class="auth-container">
     <div class="auth-wrapper">
-        
-        <!-- Messages de succès/erreur -->
-        <?php if (isset($error)): ?>
+                <?php if (isset($error)): ?>
             <div class="alert alert-error">
                 <?= htmlspecialchars($error) ?>
             </div>
